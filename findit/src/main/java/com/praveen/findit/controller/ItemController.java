@@ -16,6 +16,7 @@ import com.praveen.findit.entity.Item;
 import com.praveen.findit.enums.ItemStatus;
 import com.praveen.findit.enums.ItemType;
 import com.praveen.findit.repository.ItemRepository;
+import com.praveen.findit.util.HashUtil;
 
 @RestController
 @RequestMapping("/api/items")
@@ -54,6 +55,37 @@ public class ItemController {
                 || item.getDate() == null
                 || isBlank(item.getDescription())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "All fields are required");
+        }
+
+        if (item.getName().length() > 100 || item.getDescription().length() > 1000) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Name or description is too long");
+        }
+
+        if (item.getType() == ItemType.FOUND) {
+            // Found report mein verification aur finder ka contact zaroori hai
+            if (isBlank(item.getVerificationQuestion())
+                    || isBlank(item.getVerificationAnswer())
+                    || isBlank(item.getContactName())
+                    || isBlank(item.getContactInfo())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Found reports need a verification question, answer and your contact details");
+            }
+
+            if (item.getVerificationQuestion().length() > 200
+                    || item.getVerificationAnswer().length() > 100
+                    || item.getContactName().length() > 100
+                    || item.getContactInfo().length() > 150) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "One of the fields is too long");
+            }
+
+            // Answer ko plain text mein kabhi save nahi karte, sirf hash
+            item.setVerificationAnswer(HashUtil.hash(item.getVerificationAnswer()));
+        } else {
+            // Lost report mein ye fields hote hi nahi
+            item.setVerificationQuestion(null);
+            item.setVerificationAnswer(null);
+            item.setContactName(null);
+            item.setContactInfo(null);
         }
 
         item.setId(null);                    // client se aayi id ignore

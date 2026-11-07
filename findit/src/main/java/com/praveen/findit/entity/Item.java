@@ -3,6 +3,7 @@ package com.praveen.findit.entity;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.praveen.findit.enums.ItemStatus;
 import com.praveen.findit.enums.ItemType;
 
@@ -49,6 +50,25 @@ public class Item {
 
     private LocalDateTime createdAt;
 
+    // ----- Verification (sirf FOUND items ke liye) -----
+
+    @Column(length = 200)
+    private String verificationQuestion;
+
+    // Hash save hota hai. WRITE_ONLY = API se aa sakta hai, par JSON response mein kabhi nahi jayega.
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @Column(length = 100)
+    private String verificationAnswer;
+
+    // ----- Finder ka contact (claim approve hone par hi dikhega) -----
+
+    @Column(length = 100)
+    private String contactName;
+
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @Column(length = 150)
+    private String contactInfo;
+
     @PrePersist
     public void onCreate() {
         this.createdAt = LocalDateTime.now();
@@ -85,4 +105,16 @@ public class Item {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public String getVerificationQuestion() { return verificationQuestion; }
+    public void setVerificationQuestion(String verificationQuestion) { this.verificationQuestion = verificationQuestion; }
+
+    public String getVerificationAnswer() { return verificationAnswer; }
+    public void setVerificationAnswer(String verificationAnswer) { this.verificationAnswer = verificationAnswer; }
+
+    public String getContactName() { return contactName; }
+    public void setContactName(String contactName) { this.contactName = contactName; }
+
+    public String getContactInfo() { return contactInfo; }
+    public void setContactInfo(String contactInfo) { this.contactInfo = contactInfo; }
 }
