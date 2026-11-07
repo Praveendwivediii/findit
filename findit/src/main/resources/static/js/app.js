@@ -1,26 +1,5 @@
-// ---------- SAMPLE DATA (baad mein MySQL se aayega) ----------
-let items = [
-    { id: 1, type: "LOST", name: "Black Leather Wallet", category: "Accessories",
-      location: "Library", date: "2026-11-03",
-      desc: "Black wallet with a college ID card inside.", status: "ACTIVE" },
-    { id: 2, type: "FOUND", name: "Blue Water Bottle", category: "Other",
-      location: "Cafeteria", date: "2026-11-04",
-      desc: "Milton bottle with a sticker on the side.", status: "ACTIVE" },
-    { id: 3, type: "FOUND", name: "Samsung Phone", category: "Electronics",
-      location: "Lab Block", date: "2026-11-05",
-      desc: "Black Samsung phone with a cracked back cover.", status: "ACTIVE" },
-    { id: 4, type: "LOST", name: "Blue Backpack", category: "Bags",
-      location: "Main Gate", date: "2026-11-02",
-      desc: "Dark blue backpack with a superhero keychain.", status: "ACTIVE" },
-    { id: 5, type: "FOUND", name: "College ID Card", category: "ID/Documents",
-      location: "Auditorium", date: "2026-11-01",
-      desc: "MCA first year student ID card.", status: "RETURNED" },
-    { id: 6, type: "LOST", name: "Java Textbook", category: "Books",
-      location: "Hostel", date: "2026-11-06",
-      desc: "Java: The Complete Reference, name written inside.", status: "ACTIVE" }
-];
-
-let nextId = 7;
+// ---------- STATE ----------
+let items = [];
 let selectedType = "All";
 
 // ---------- ELEMENTS ----------
@@ -46,14 +25,30 @@ function formatDate(dateStr) {
     return d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 }
 
-// ---------- STATS ----------
-function updateStats() {
-    document.getElementById("statLost").textContent =
-        items.filter(i => i.type === "LOST").length;
-    document.getElementById("statFound").textContent =
-        items.filter(i => i.type === "FOUND").length;
-    document.getElementById("statReturned").textContent =
-        items.filter(i => i.status === "RETURNED").length;
+// ---------- API CALLS ----------
+async function loadItems() {
+    try {
+        const response = await fetch("/api/items");
+        if (!response.ok) throw new Error("Server error");
+        items = await response.json();
+        renderItems();
+    } catch (error) {
+        noResults.textContent = "Could not load items. Is the server running?";
+        noResults.classList.remove("hidden");
+    }
+}
+
+async function loadStats() {
+    try {
+        const response = await fetch("/api/items/stats");
+        if (!response.ok) throw new Error("Server error");
+        const stats = await response.json();
+        document.getElementById("statLost").textContent = stats.lost;
+        document.getElementById("statFound").textContent = stats.found;
+        document.getElementById("statReturned").textContent = stats.returned;
+    } catch (error) {
+        console.error("Stats load failed:", error);
+    }
 }
 
 // ---------- RENDER ITEMS ----------
@@ -61,13 +56,11 @@ function renderItems() {
     const query = searchInput.value.trim().toLowerCase();
     const category = categoryFilter.value;
 
-    // Returned items active feed se bahar
     const filtered = items.filter(item => {
-        if (item.status === "RETURNED") return false;
         if (selectedType !== "All" && item.type !== selectedType) return false;
         if (category !== "All" && item.category !== category) return false;
 
-        const text = (item.name + " " + item.desc + " " + item.location).toLowerCase();
+        const text = (item.name + " " + item.description + " " + item.location).toLowerCase();
         return text.includes(query);
     });
 
@@ -83,7 +76,7 @@ function renderItems() {
                 <span class="item-category">${escapeHtml(item.category)}</span>
             </div>
             <h3 class="item-title">${escapeHtml(item.name)}</h3>
-            <p class="item-desc">${escapeHtml(item.desc)}</p>
+            <p class="item-desc">${escapeHtml(item.description)}</p>
             <div class="item-meta">
                 <span>📍 ${escapeHtml(item.location)}</span>
                 <span>📅 ${formatDate(item.date)}</span>
@@ -95,7 +88,14 @@ function renderItems() {
         grid.appendChild(card);
     });
 
-    noResults.classList.toggle("hidden", filtered.length > 0);
+    if (filtered.length === 0) {
+        noResults.textContent = items.length === 0
+            ? "No reports yet. Be the first to report an item!"
+            : "No items match your search.";
+        noResults.classList.remove("hidden");
+    } else {
+        noResults.classList.add("hidden");
+    }
 }
 
 // ---------- FILTER EVENTS ----------
@@ -111,7 +111,7 @@ chips.forEach(chip => {
     });
 });
 
-// Card button (claim abhi placeholder hai)
+// Claim button (next module mein banega)
 grid.addEventListener("click", e => {
     if (e.target.classList.contains("card-btn")) {
         alert("Claim and verification will be built in the next module!");
@@ -144,38 +144,49 @@ document.addEventListener("keydown", e => {
     if (e.key === "Escape") closeModal();
 });
 
-// ---------- SUBMIT REPORT ----------
-document.getElementById("submitReport").addEventListener("click", () => {
+// ---------- SUBMIT REPORT (POST to Java) ----------
+document.getElementById("submitReport").addEventListener("click", async () => {
     const name = document.getElementById("fName").value.trim();
-    const desc = document.getElementById("fDesc").value.trim();
+    const description = document.getElementById("fDesc").value.trim();
     const date = document.getElementById("fDate").value;
 
-    if (name.length < 3 || desc.length < 5 || !date) {
+    if (name.length < 3 || description.length < 5 || !date) {
         formError.textContent = "Please fill name (3+ chars), description (5+ chars) and date.";
         formError.classList.remove("hidden");
         return;
     }
 
-    items.unshift({
-        id: nextId++,
+    const payload = {
         type: document.getElementById("fType").value,
         name: name,
         category: document.getElementById("fCategory").value,
         location: document.getElementById("fLocation").value,
         date: date,
-        desc: desc,
-        status: "ACTIVE"
-    });
+        description: description
+    };
 
-    document.getElementById("fName").value = "";
-    document.getElementById("fDesc").value = "";
+    try {
+        const response = await fetch("/api/items", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
 
-    closeModal();
-    updateStats();
-    renderItems();
-    document.getElementById("items").scrollIntoView();
+        if (!response.ok) throw new Error("Save failed");
+
+        document.getElementById("fName").value = "";
+        document.getElementById("fDesc").value = "";
+
+        closeModal();
+        await loadItems();
+        await loadStats();
+        document.getElementById("items").scrollIntoView();
+    } catch (error) {
+        formError.textContent = "Could not save the report. Please try again.";
+        formError.classList.remove("hidden");
+    }
 });
 
 // ---------- START ----------
-updateStats();
-renderItems();
+loadItems();
+loadStats();
