@@ -45,6 +45,15 @@ function formatDate(dateStr) {
 }
 
 function goToLogin() {
+    // Loop se bachne ke liye: 10 second mein sirf ek baar redirect
+    const last = Number(sessionStorage.getItem("findit-redirect") || 0);
+    if (Date.now() - last < 10000) {
+        document.body.insertAdjacentHTML("afterbegin",
+            '<div style="padding:12px;background:#e11d48;color:#fff;text-align:center;position:relative;z-index:999">' +
+            'Login required, but the server did not accept your session. Press F12 and open Console.</div>');
+        return;
+    }
+    sessionStorage.setItem("findit-redirect", String(Date.now()));
     window.location.href = "/login.html";
 }
 
@@ -53,6 +62,7 @@ function goToLogin() {
 async function apiGet(url) {
     const response = await fetch(url);
     if (response.status === 401) {
+        console.warn("401 from:", url); // added this in last
         goToLogin();
         throw new Error("Not logged in");
     }

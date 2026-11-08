@@ -262,12 +262,6 @@
                 return fallback;
             }
         }
-
-        // ---------- AGAR PEHLE SE LOGGED IN HAI ----------
-        fetch("/api/auth/me").then(function (response) {
-            if (response.ok) window.location.href = "/";
-        });
-
         // ---------- LOGIN ----------
         async function doLogin() {
             loginError.classList.add("hidden");
