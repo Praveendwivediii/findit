@@ -211,10 +211,75 @@
                 <label>Description
                     <textarea id="fDesc" rows="3" placeholder="Colour, brand, marks, etc."></textarea>
                 </label>
+                                <div id="foundFields" class="hidden">
+                    <div class="form-note">
+                        🔒 Ye details sirf verify hone ke baad owner ko dikhengi.
+                    </div>
+
+                    <label>Verification Question
+                        <input type="text" id="fQuestion" maxlength="200" placeholder="e.g. What is written inside the wallet?">
+                    </label>
+
+                    <label>Correct Answer
+                        <input type="text" id="fAnswer" maxlength="100" placeholder="Only the real owner would know this">
+                    </label>
+
+                    <label>Your Name
+                        <input type="text" id="fContactName" maxlength="100" placeholder="e.g. Rahul">
+                    </label>
+
+                    <label>Your Contact (email or phone)
+                        <input type="text" id="fContactInfo" maxlength="150" placeholder="e.g. rahul@gmail.com">
+                    </label>
+                </div>
 
                 <p id="formError" class="form-error hidden"></p>
 
                 <button id="submitReport" class="btn-primary full" type="button">Submit Report</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- CLAIM MODAL -->
+    <div id="claimModal" class="modal hidden">
+        <div class="modal-box">
+            <button id="closeClaim" class="modal-close" type="button">&times;</button>
+            <h2>Claim This Item</h2>
+
+            <div id="claimForm">
+                <p class="claim-hint">Finder ne ek sawaal rakha hai. Sahi jawab dene par hi unka contact dikhega.</p>
+
+                <div class="question-box">
+                    <span>Question</span>
+                    <strong id="claimQuestion"></strong>
+                </div>
+
+                <label>Your Answer
+                    <input type="text" id="cAnswer" maxlength="100" placeholder="Type your answer">
+                </label>
+
+                <label>Your Name
+                    <input type="text" id="cName" maxlength="100" placeholder="Your name">
+                </label>
+
+                <label>Your Contact (email or phone)
+                    <input type="text" id="cContact" maxlength="150" placeholder="So the finder can reach you">
+                </label>
+
+                <p id="claimError" class="form-error hidden"></p>
+
+                <button id="submitClaim" class="btn-primary full" type="button">Verify &amp; Claim</button>
+            </div>
+
+            <div id="claimResult" class="claim-result hidden">
+                <div class="success-icon">🎉</div>
+                <h3>Ownership verified!</h3>
+                <p>Finder se yahan contact karo:</p>
+                <div class="contact-card">
+                    <strong id="resName"></strong>
+                    <span id="resContact"></span>
+                </div>
+                <p class="claim-hint">Item lene se pehle apni ID ya koi proof saath rakhna.</p>
             </div>
         </div>
     </div>

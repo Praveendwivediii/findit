@@ -7,9 +7,11 @@ themeToggle.addEventListener("click", () => {
     document.documentElement.setAttribute("data-theme", next);
     localStorage.setItem("findit-theme", next);
 });
+
 // ---------- STATE ----------
 let items = [];
 let selectedType = "All";
+let claimItemId = null;
 
 // ---------- ELEMENTS ----------
 const grid = document.getElementById("itemsGrid");
@@ -21,6 +23,13 @@ const chips = document.querySelectorAll(".chip");
 const modal = document.getElementById("reportModal");
 const modalTitle = document.getElementById("modalTitle");
 const formError = document.getElementById("formError");
+const fType = document.getElementById("fType");
+const foundFields = document.getElementById("foundFields");
+
+const claimModal = document.getElementById("claimModal");
+const claimForm = document.getElementById("claimForm");
+const claimResult = document.getElementById("claimResult");
+const claimError = document.getElementById("claimError");
 
 // ---------- HELPERS ----------
 function escapeHtml(text) {
@@ -90,7 +99,7 @@ function renderItems() {
                 <span>📍 ${escapeHtml(item.location)}</span>
                 <span>📅 ${formatDate(item.date)}</span>
             </div>
-            <button class="card-btn" data-id="${item.id}">
+            <button class="card-btn" data-id="${item.id}" data-type="${item.type}">
                 ${isLost ? "I Found This" : "This Is Mine"}
             </button>
         `;
@@ -120,25 +129,48 @@ chips.forEach(chip => {
     });
 });
 
-// Claim button (next module mein banega)
+// ---------- CARD BUTTON ----------
 grid.addEventListener("click", e => {
-    if (e.target.classList.contains("card-btn")) {
-        alert("Claim and verification will be built in the next module!");
+    const btn = e.target.closest(".card-btn");
+    if (!btn) return;
+
+    const id = Number(btn.dataset.id);
+
+    if (btn.dataset.type === "FOUND") {
+        openClaim(id);
+    } else {
+        // "I Found This" -> Found report form khul jaye, item ka naam pehle se bhara
+        const lostItem = items.find(i => i.id === id);
+        openModal("FOUND");
+        if (lostItem) {
+            document.getElementById("fName").value = lostItem.name;
+            document.getElementById("fCategory").value = lostItem.category;
+        }
     }
 });
 
-// ---------- MODAL ----------
+// ---------- REPORT MODAL ----------
+function toggleFoundFields() {
+    foundFields.classList.toggle("hidden", fType.value !== "FOUND");
+}
+
 function openModal(type) {
-    document.getElementById("fType").value = type;
+    fType.value = type;
     modalTitle.textContent = type === "LOST" ? "Report a Lost Item" : "Report a Found Item";
     document.getElementById("fDate").value = new Date().toISOString().split("T")[0];
     formError.classList.add("hidden");
+    toggleFoundFields();
     modal.classList.remove("hidden");
 }
 
 function closeModal() {
     modal.classList.add("hidden");
 }
+
+fType.addEventListener("change", () => {
+    modalTitle.textContent = fType.value === "LOST" ? "Report a Lost Item" : "Report a Found Item";
+    toggleFoundFields();
+});
 
 document.getElementById("lostButton").addEventListener("click", () => openModal("LOST"));
 document.getElementById("foundButton").addEventListener("click", () => openModal("FOUND"));
@@ -149,12 +181,9 @@ modal.addEventListener("click", e => {
     if (e.target === modal) closeModal();
 });
 
-document.addEventListener("keydown", e => {
-    if (e.key === "Escape") closeModal();
-});
-
-// ---------- SUBMIT REPORT (POST to Java) ----------
+// ---------- SUBMIT REPORT ----------
 document.getElementById("submitReport").addEventListener("click", async () => {
+    const type = fType.value;
     const name = document.getElementById("fName").value.trim();
     const description = document.getElementById("fDesc").value.trim();
     const date = document.getElementById("fDate").value;
@@ -166,13 +195,27 @@ document.getElementById("submitReport").addEventListener("click", async () => {
     }
 
     const payload = {
-        type: document.getElementById("fType").value,
+        type: type,
         name: name,
         category: document.getElementById("fCategory").value,
         location: document.getElementById("fLocation").value,
         date: date,
         description: description
     };
+
+    if (type === "FOUND") {
+        payload.verificationQuestion = document.getElementById("fQuestion").value.trim();
+        payload.verificationAnswer = document.getElementById("fAnswer").value.trim();
+        payload.contactName = document.getElementById("fContactName").value.trim();
+        payload.contactInfo = document.getElementById("fContactInfo").value.trim();
+
+        if (!payload.verificationQuestion || !payload.verificationAnswer
+                || !payload.contactName || !payload.contactInfo) {
+            formError.textContent = "Found reports need a question, its answer, your name and your contact.";
+            formError.classList.remove("hidden");
+            return;
+        }
+    }
 
     try {
         const response = await fetch("/api/items", {
@@ -183,16 +226,100 @@ document.getElementById("submitReport").addEventListener("click", async () => {
 
         if (!response.ok) throw new Error("Save failed");
 
-        document.getElementById("fName").value = "";
-        document.getElementById("fDesc").value = "";
+        ["fName", "fDesc", "fQuestion", "fAnswer", "fContactName", "fContactInfo"]
+            .forEach(id => { document.getElementById(id).value = ""; });
 
         closeModal();
         await loadItems();
         await loadStats();
         document.getElementById("items").scrollIntoView();
     } catch (error) {
-        formError.textContent = "Could not save the report. Please try again.";
+        formError.textContent = "Could not save the report. Please check the fields and try again.";
         formError.classList.remove("hidden");
+    }
+});
+
+// ---------- CLAIM FLOW ----------
+async function openClaim(id) {
+    try {
+        const response = await fetch("/api/items/" + id + "/question");
+        if (!response.ok) {
+            alert("This item has no verification question set, so it cannot be claimed online.");
+            return;
+        }
+        const data = await response.json();
+
+        claimItemId = id;
+        document.getElementById("claimQuestion").textContent = data.question;
+        ["cAnswer", "cName", "cContact"].forEach(f => { document.getElementById(f).value = ""; });
+        claimError.classList.add("hidden");
+        claimForm.classList.remove("hidden");
+        claimResult.classList.add("hidden");
+        claimModal.classList.remove("hidden");
+    } catch (error) {
+        alert("Could not load the question. Please try again.");
+    }
+}
+
+function closeClaim() {
+    claimModal.classList.add("hidden");
+    claimItemId = null;
+}
+
+document.getElementById("closeClaim").addEventListener("click", closeClaim);
+
+claimModal.addEventListener("click", e => {
+    if (e.target === claimModal) closeClaim();
+});
+
+document.getElementById("submitClaim").addEventListener("click", async () => {
+    const answer = document.getElementById("cAnswer").value.trim();
+    const claimantName = document.getElementById("cName").value.trim();
+    const claimantContact = document.getElementById("cContact").value.trim();
+
+    if (!answer || !claimantName || !claimantContact) {
+        claimError.textContent = "Please fill your answer, name and contact.";
+        claimError.classList.remove("hidden");
+        return;
+    }
+
+    try {
+        const response = await fetch("/api/items/" + claimItemId + "/claim", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ claimantName, claimantContact, answer })
+        });
+
+        if (response.status === 429) {
+            claimError.textContent = "No attempts left for this item. Please contact campus security.";
+            claimError.classList.remove("hidden");
+            return;
+        }
+
+        if (!response.ok) throw new Error("Claim failed");
+
+        const data = await response.json();
+
+        if (data.approved) {
+            document.getElementById("resName").textContent = data.finderName;
+            document.getElementById("resContact").textContent = data.finderContact;
+            claimForm.classList.add("hidden");
+            claimResult.classList.remove("hidden");
+        } else {
+            claimError.textContent = "Wrong answer. Attempts left: " + data.attemptsLeft;
+            claimError.classList.remove("hidden");
+        }
+    } catch (error) {
+        claimError.textContent = "Something went wrong. Please try again.";
+        claimError.classList.remove("hidden");
+    }
+});
+
+// ---------- ESC KEY ----------
+document.addEventListener("keydown", e => {
+    if (e.key === "Escape") {
+        closeModal();
+        closeClaim();
     }
 });
 

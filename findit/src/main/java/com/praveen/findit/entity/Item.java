@@ -62,6 +62,7 @@ public class Item {
 
     // ----- Finder ka contact (claim approve hone par hi dikhega) -----
 
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Column(length = 100)
     private String contactName;
 

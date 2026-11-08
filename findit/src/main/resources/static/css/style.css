@@ -709,3 +709,84 @@ footer {
         padding: 50px 6% 24px;
     }
 }
+
+
+/* ================= CLAIM & VERIFICATION ================= */
+.form-note {
+    margin-bottom: 16px;
+    padding: 12px 14px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--primary);
+    background: var(--surface-2);
+    border: 1px dashed var(--primary);
+    border-radius: 12px;
+}
+
+.claim-hint {
+    margin: 0 0 16px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-muted);
+}
+
+.question-box {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 18px;
+    padding: 16px 18px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--primary);
+    border-radius: 12px;
+}
+
+.question-box span {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.question-box strong {
+    font-size: 17px;
+    line-height: 1.4;
+}
+
+.claim-result {
+    text-align: center;
+}
+
+.claim-result h3 {
+    margin: 8px 0;
+    font-size: 24px;
+}
+
+.success-icon {
+    font-size: 54px;
+    animation: pop 0.4s ease;
+}
+
+.contact-card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 18px 0;
+    padding: 20px;
+    background: var(--found-bg);
+    border: 1px solid var(--found-text);
+    border-radius: 16px;
+}
+
+.contact-card strong {
+    font-size: 20px;
+    color: var(--found-text);
+}
+
+.contact-card span {
+    font-size: 17px;
+    font-weight: 600;
+    word-break: break-all;
+}
