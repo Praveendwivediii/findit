@@ -67,7 +67,7 @@ public class SecurityConfig {
 
             .authorizeHttpRequests(auth -> auth
                 // Ye sab bina login ke khule rahenge
-                .requestMatchers("/login.html", "/css/**", "/js/**", "/images/**", "/favicon.ico").permitAll()
+                .requestMatchers("/login.html", "/error", "/css/**", "/js/**", "/images/**", "/favicon.ico").permitAll()
                 .requestMatchers("/api/auth/csrf", "/api/auth/register", "/api/auth/login").permitAll()
                 // Baaki sab kuch (home page, items, claims) login ke baad hi
                 .anyRequest().authenticated()
