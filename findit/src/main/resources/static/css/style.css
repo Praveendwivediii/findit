@@ -790,3 +790,41 @@ footer {
     font-weight: 600;
     word-break: break-all;
 }
+
+
+/* ================= USER / LOGOUT ================= */
+.user-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.logout-btn {
+    padding: 11px 18px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.logout-btn:hover {
+    color: var(--lost-text);
+    border-color: var(--lost-text);
+}
+
+@media (max-width: 800px) {
+    .user-name {
+        display: none;
+    }
+
+    .logout-btn,
+    .nav-button {
+        padding: 10px 14px;
+        font-size: 13px;
+    }
+}

@@ -12,6 +12,7 @@ themeToggle.addEventListener("click", () => {
 let items = [];
 let selectedType = "All";
 let claimItemId = null;
+let currentUser = null;
 
 // ---------- ELEMENTS ----------
 const grid = document.getElementById("itemsGrid");
@@ -43,10 +44,73 @@ function formatDate(dateStr) {
     return d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 }
 
-// ---------- API CALLS ----------
+function goToLogin() {
+    window.location.href = "/login.html";
+}
+
+// ---------- API HELPERS ----------
+// GET request. Login nahi hai (401) to seedha login page par.
+async function apiGet(url) {
+    const response = await fetch(url);
+    if (response.status === 401) {
+        goToLogin();
+        throw new Error("Not logged in");
+    }
+    return response;
+}
+
+// POST request. Har POST ke saath fresh CSRF token jata hai.
+async function apiPost(url, body) {
+    const csrfResponse = await fetch("/api/auth/csrf");
+    const csrf = await csrfResponse.json();
+
+    const headers = { "Content-Type": "application/json" };
+    headers[csrf.headerName] = csrf.token;
+
+    const response = await fetch(url, {
+        method: "POST",
+        headers: headers,
+        body: body === undefined ? undefined : JSON.stringify(body)
+    });
+
+    if (response.status === 401) {
+        goToLogin();
+        throw new Error("Not logged in");
+    }
+    return response;
+}
+
+// ---------- CURRENT USER ----------
+async function loadUser() {
+    try {
+        const response = await apiGet("/api/auth/me");
+        if (!response.ok) return;
+        currentUser = await response.json();
+
+        const nameEl = document.getElementById("userName");
+        if (nameEl) nameEl.textContent = "Hi, " + currentUser.name.split(" ")[0];
+    } catch (error) {
+        // apiGet pehle hi redirect kar chuka hai
+    }
+}
+
+// ---------- LOGOUT ----------
+const logoutBtn = document.getElementById("logoutBtn");
+if (logoutBtn) {
+    logoutBtn.addEventListener("click", async () => {
+        try {
+            await apiPost("/api/auth/logout");
+        } catch (error) {
+            // koi baat nahi, neeche redirect ho jayega
+        }
+        goToLogin();
+    });
+}
+
+// ---------- LOAD DATA ----------
 async function loadItems() {
     try {
-        const response = await fetch("/api/items");
+        const response = await apiGet("/api/items");
         if (!response.ok) throw new Error("Server error");
         items = await response.json();
         renderItems();
@@ -58,7 +122,7 @@ async function loadItems() {
 
 async function loadStats() {
     try {
-        const response = await fetch("/api/items/stats");
+        const response = await apiGet("/api/items/stats");
         if (!response.ok) throw new Error("Server error");
         const stats = await response.json();
         document.getElementById("statLost").textContent = stats.lost;
@@ -139,7 +203,6 @@ grid.addEventListener("click", e => {
     if (btn.dataset.type === "FOUND") {
         openClaim(id);
     } else {
-        // "I Found This" -> Found report form khul jaye, item ka naam pehle se bhara
         const lostItem = items.find(i => i.id === id);
         openModal("FOUND");
         if (lostItem) {
@@ -160,6 +223,15 @@ function openModal(type) {
     document.getElementById("fDate").value = new Date().toISOString().split("T")[0];
     formError.classList.add("hidden");
     toggleFoundFields();
+
+    // Login wale user ka naam/email pehle se bhar do (badal sakte hain)
+    if (currentUser) {
+        const nameField = document.getElementById("fContactName");
+        const infoField = document.getElementById("fContactInfo");
+        if (!nameField.value) nameField.value = currentUser.name;
+        if (!infoField.value) infoField.value = currentUser.email;
+    }
+
     modal.classList.remove("hidden");
 }
 
@@ -218,12 +290,7 @@ document.getElementById("submitReport").addEventListener("click", async () => {
     }
 
     try {
-        const response = await fetch("/api/items", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-        });
-
+        const response = await apiPost("/api/items", payload);
         if (!response.ok) throw new Error("Save failed");
 
         ["fName", "fDesc", "fQuestion", "fAnswer", "fContactName", "fContactInfo"]
@@ -242,7 +309,7 @@ document.getElementById("submitReport").addEventListener("click", async () => {
 // ---------- CLAIM FLOW ----------
 async function openClaim(id) {
     try {
-        const response = await fetch("/api/items/" + id + "/question");
+        const response = await apiGet("/api/items/" + id + "/question");
         if (!response.ok) {
             alert("This item has no verification question set, so it cannot be claimed online.");
             return;
@@ -251,13 +318,15 @@ async function openClaim(id) {
 
         claimItemId = id;
         document.getElementById("claimQuestion").textContent = data.question;
-        ["cAnswer", "cName", "cContact"].forEach(f => { document.getElementById(f).value = ""; });
+        document.getElementById("cAnswer").value = "";
+        document.getElementById("cName").value = currentUser ? currentUser.name : "";
+        document.getElementById("cContact").value = currentUser ? currentUser.email : "";
         claimError.classList.add("hidden");
         claimForm.classList.remove("hidden");
         claimResult.classList.add("hidden");
         claimModal.classList.remove("hidden");
     } catch (error) {
-        alert("Could not load the question. Please try again.");
+        console.error("Claim open failed:", error);
     }
 }
 
@@ -284,11 +353,8 @@ document.getElementById("submitClaim").addEventListener("click", async () => {
     }
 
     try {
-        const response = await fetch("/api/items/" + claimItemId + "/claim", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ claimantName, claimantContact, answer })
-        });
+        const response = await apiPost("/api/items/" + claimItemId + "/claim",
+                { claimantName, claimantContact, answer });
 
         if (response.status === 429) {
             claimError.textContent = "No attempts left for this item. Please contact campus security.";
@@ -324,5 +390,6 @@ document.addEventListener("keydown", e => {
 });
 
 // ---------- START ----------
+loadUser();
 loadItems();
 loadStats();

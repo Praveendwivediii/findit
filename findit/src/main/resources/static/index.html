@@ -37,7 +37,9 @@
                 <span class="icon-sun">☀️</span>
                 <span class="icon-moon">🌙</span>
             </button>
+            <span id="userName" class="user-name"></span>
             <button id="navReportBtn" class="nav-button" type="button">+ Report Item</button>
+            <button id="logoutBtn" class="logout-btn" type="button">Logout</button>
         </div>
     </header>
 
@@ -283,6 +285,374 @@
             </div>
         </div>
     </div>
+
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FindIt | Login</title>
+
+    <script>
+        (function () {
+            var saved = localStorage.getItem("findit-theme");
+            var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+            document.documentElement.setAttribute("data-theme", saved || (prefersDark ? "dark" : "light"));
+        })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+
+    <style>
+        .auth-page {
+            position: relative;
+            overflow: hidden;
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            padding: 24px;
+            background: var(--bg-alt);
+        }
+
+        .auth-theme {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 2;
+        }
+
+        .auth-card {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 440px;
+            padding: 36px 32px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            box-shadow: var(--shadow);
+            animation: pop 0.3s ease;
+        }
+
+        .auth-card .logo {
+            display: block;
+            margin-bottom: 6px;
+            text-align: center;
+        }
+
+        .auth-tagline {
+            margin: 0 0 24px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .auth-tabs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin-bottom: 22px;
+            padding: 5px;
+            background: var(--surface-2);
+            border-radius: 14px;
+        }
+
+        .auth-tab {
+            padding: 10px;
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-muted);
+            background: transparent;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .auth-tab.active {
+            color: var(--text);
+            background: var(--surface);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+        }
+
+        .auth-card label {
+            display: block;
+            margin-bottom: 14px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .auth-card input {
+            display: block;
+            width: 100%;
+            margin-top: 6px;
+            padding: 12px 14px;
+            font-family: inherit;
+            font-size: 15px;
+            color: var(--text);
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+        }
+
+        .auth-card input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+        }
+
+        .optional {
+            font-weight: 400;
+            color: var(--text-muted);
+        }
+
+        .auth-success {
+            margin: 0 0 12px;
+            font-size: 14px;
+            color: var(--found-text);
+        }
+
+        .back-link {
+            display: block;
+            margin-top: 18px;
+            text-align: center;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+
+    <main class="auth-page">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+
+        <button id="themeToggle" class="theme-toggle auth-theme" type="button" aria-label="Toggle dark and light mode">
+            <span class="icon-sun">☀️</span>
+            <span class="icon-moon">🌙</span>
+        </button>
+
+        <div class="auth-card">
+            <a href="/login.html" class="logo">Find<span>It</span></a>
+            <p class="auth-tagline">Sign in to report, search and claim items on campus.</p>
+
+            <div class="auth-tabs">
+                <button id="tabLogin" class="auth-tab active" type="button">Login</button>
+                <button id="tabRegister" class="auth-tab" type="button">Register</button>
+            </div>
+
+            <!-- LOGIN FORM -->
+            <div id="loginForm">
+                <label>Email
+                    <input type="email" id="lEmail" maxlength="150" placeholder="you@example.com" autocomplete="username">
+                </label>
+
+                <label>Password
+                    <input type="password" id="lPassword" maxlength="72" placeholder="Your password" autocomplete="current-password">
+                </label>
+
+                <p id="loginError" class="form-error hidden"></p>
+                <button id="loginBtn" class="btn-primary full" type="button">Login</button>
+            </div>
+
+            <!-- REGISTER FORM -->
+            <div id="registerForm" class="hidden">
+                <label>Full Name
+                    <input type="text" id="rName" maxlength="100" placeholder="e.g. Praveen" autocomplete="name">
+                </label>
+
+                <label>Email
+                    <input type="email" id="rEmail" maxlength="150" placeholder="you@example.com" autocomplete="username">
+                </label>
+
+                <label>Phone <span class="optional">(optional)</span>
+                    <input type="tel" id="rPhone" maxlength="20" placeholder="+91 98765 43210" autocomplete="tel">
+                </label>
+
+                <label>Password
+                    <input type="password" id="rPassword" maxlength="72" placeholder="At least 8 characters" autocomplete="new-password">
+                </label>
+
+                <label>Confirm Password
+                    <input type="password" id="rConfirm" maxlength="72" placeholder="Type it again" autocomplete="new-password">
+                </label>
+
+                <p id="registerError" class="form-error hidden"></p>
+                <p id="registerSuccess" class="auth-success hidden"></p>
+                <button id="registerBtn" class="btn-primary full" type="button">Create Account</button>
+            </div>
+
+            <span class="back-link">FindIt: Lost &amp; Found Campus Portal</span>
+        </div>
+    </main>
+
+    <script>
+        // ---------- THEME ----------
+        document.getElementById("themeToggle").addEventListener("click", function () {
+            var current = document.documentElement.getAttribute("data-theme");
+            var next = current === "dark" ? "light" : "dark";
+            document.documentElement.setAttribute("data-theme", next);
+            localStorage.setItem("findit-theme", next);
+        });
+
+        // ---------- ELEMENTS ----------
+        var tabLogin = document.getElementById("tabLogin");
+        var tabRegister = document.getElementById("tabRegister");
+        var loginForm = document.getElementById("loginForm");
+        var registerForm = document.getElementById("registerForm");
+        var loginError = document.getElementById("loginError");
+        var registerError = document.getElementById("registerError");
+        var registerSuccess = document.getElementById("registerSuccess");
+
+        function showError(el, message) {
+            el.textContent = message;
+            el.classList.remove("hidden");
+        }
+
+        function switchTab(tab) {
+            var isLogin = tab === "login";
+            tabLogin.classList.toggle("active", isLogin);
+            tabRegister.classList.toggle("active", !isLogin);
+            loginForm.classList.toggle("hidden", !isLogin);
+            registerForm.classList.toggle("hidden", isLogin);
+            loginError.classList.add("hidden");
+            registerError.classList.add("hidden");
+            registerSuccess.classList.add("hidden");
+        }
+
+        tabLogin.addEventListener("click", function () { switchTab("login"); });
+        tabRegister.addEventListener("click", function () { switchTab("register"); });
+
+        // ---------- CSRF TOKEN ----------
+        // Har POST se pehle server se fresh token lete hain
+        async function getCsrf() {
+            var response = await fetch("/api/auth/csrf");
+            if (!response.ok) throw new Error("CSRF failed");
+            return response.json();
+        }
+
+        async function postJson(url, body) {
+            var csrf = await getCsrf();
+            var headers = { "Content-Type": "application/json" };
+            headers[csrf.headerName] = csrf.token;
+            return fetch(url, { method: "POST", headers: headers, body: JSON.stringify(body) });
+        }
+
+        async function readMessage(response, fallback) {
+            try {
+                var data = await response.json();
+                return data.message || fallback;
+            } catch (e) {
+                return fallback;
+            }
+        }
+
+        // ---------- AGAR PEHLE SE LOGGED IN HAI ----------
+        fetch("/api/auth/me").then(function (response) {
+            if (response.ok) window.location.href = "/";
+        });
+
+        // ---------- LOGIN ----------
+        async function doLogin() {
+            loginError.classList.add("hidden");
+
+            var email = document.getElementById("lEmail").value.trim();
+            var password = document.getElementById("lPassword").value;
+
+            if (!email || !password) {
+                showError(loginError, "Please enter your email and password.");
+                return;
+            }
+
+            try {
+                var response = await postJson("/api/auth/login", { email: email, password: password });
+
+                if (response.status === 401) {
+                    showError(loginError, "Invalid email or password.");
+                    return;
+                }
+                if (!response.ok) {
+                    showError(loginError, await readMessage(response, "Login failed. Please try again."));
+                    return;
+                }
+
+                window.location.href = "/";
+            } catch (e) {
+                showError(loginError, "Could not reach the server. Is it running?");
+            }
+        }
+
+        document.getElementById("loginBtn").addEventListener("click", doLogin);
+        document.getElementById("lPassword").addEventListener("keydown", function (e) {
+            if (e.key === "Enter") doLogin();
+        });
+
+        // ---------- REGISTER ----------
+        async function doRegister() {
+            registerError.classList.add("hidden");
+            registerSuccess.classList.add("hidden");
+
+            var name = document.getElementById("rName").value.trim();
+            var email = document.getElementById("rEmail").value.trim();
+            var phone = document.getElementById("rPhone").value.trim();
+            var password = document.getElementById("rPassword").value;
+            var confirm = document.getElementById("rConfirm").value;
+
+            if (name.length < 2) {
+                showError(registerError, "Please enter your name (2+ characters).");
+                return;
+            }
+            if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+                showError(registerError, "Please enter a valid email.");
+                return;
+            }
+            if (phone && !/^[+0-9 ]{7,20}$/.test(phone)) {
+                showError(registerError, "Phone can only have digits, spaces and +.");
+                return;
+            }
+            if (password.length < 8) {
+                showError(registerError, "Password must be at least 8 characters.");
+                return;
+            }
+            if (password !== confirm) {
+                showError(registerError, "Passwords do not match.");
+                return;
+            }
+
+            try {
+                var response = await postJson("/api/auth/register",
+                        { name: name, email: email, phone: phone, password: password });
+
+                if (response.status === 409) {
+                    showError(registerError, "An account with this email already exists.");
+                    return;
+                }
+                if (!response.ok) {
+                    showError(registerError, await readMessage(response, "Could not create the account."));
+                    return;
+                }
+
+                // Account ban gaya: Login tab par bhejo, email pehle se bhara
+                document.getElementById("lEmail").value = email;
+                document.getElementById("lPassword").value = "";
+                ["rName", "rEmail", "rPhone", "rPassword", "rConfirm"].forEach(function (id) {
+                    document.getElementById(id).value = "";
+                });
+                switchTab("login");
+                showError(loginError, "Account created! Please login.");
+                loginError.style.color = "var(--found-text)";
+            } catch (e) {
+                showError(registerError, "Could not reach the server. Is it running?");
+            }
+        }
+
+        document.getElementById("registerBtn").addEventListener("click", doRegister);
+    </script>
 
 </body>
 </html>
