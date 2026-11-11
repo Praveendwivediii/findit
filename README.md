@@ -274,8 +274,8 @@ This is an actively developed learning project, so a few things are intentionall
 **Praveen**: MCA student, building FindIt to learn full-stack Java end to end.
 
 - GitHub: [@Praveendwivediii](https://github.com/Praveendwivediii)
-- LinkedIn: [your-linkedin-id](https://www.linkedin.com/in/your-linkedin-id)
-- Email: your-email@example.com
+- LinkedIn: [Praveen-Dwivedi](https://www.linkedin.com/in/praveendwivedii/)
+- Email: praveendwivedi1245@gmail.com
 
 ## 📄 License
 
