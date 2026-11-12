@@ -280,9 +280,7 @@ This is an actively developed learning project, so a few things are intentionall
 ## 📄 License
 
 Released under the [MIT License](LICENSE).
-
 ---
-
 <div align="center">
 
 If this project helped you, consider giving it a ⭐
