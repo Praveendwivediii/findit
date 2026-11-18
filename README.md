@@ -28,17 +28,20 @@ On most campuses, lost items end up in a security office with no digital record,
 
 ## 📸 Screenshots
 
-| Dashboard | Browse items |
-|---|---|
-| ![Dashboard](docs/screenshots/dashboard.png) | ![Browse items](docs/screenshots/browse-items.png) |
-
-| Search and filter | Claim: verification question |
-|---|---|
-| ![Search results](docs/screenshots/search.png) | ![Claim question](docs/screenshots/claim-question.png) |
-
-| Claim: wrong answer, attempts left | Claim: ownership verified |
-|---|---|
-| ![Wrong answer](docs/screenshots/claim-wrong-answer.png) | ![Ownership verified](docs/screenshots/claim-verified.png) |
+<table>
+<tr>
+<td width="50%" align="center"><img src="docs/screenshots/dashboard.png" alt="Dashboard" width="100%"><br><sub><b>Dashboard</b></sub></td>
+<td width="50%" align="center"><img src="docs/screenshots/browse-items.png" alt="Browse items" width="100%"><br><sub><b>Browse items</b></sub></td>
+</tr>
+<tr>
+<td width="50%" align="center"><img src="docs/screenshots/search.png" alt="Search results" width="100%"><br><sub><b>Search and filter</b></sub></td>
+<td width="50%" align="center"><img src="docs/screenshots/claim-question.png" alt="Claim question" width="100%"><br><sub><b>Claim: verification question</b></sub></td>
+</tr>
+<tr>
+<td width="50%" align="center"><img src="docs/screenshots/claim-wrong-answer.png" alt="Wrong answer" width="100%"><br><sub><b>Claim: wrong answer, attempts left</b></sub></td>
+<td width="50%" align="center"><img src="docs/screenshots/claim-verified.png" alt="Ownership verified" width="100%"><br><sub><b>Claim: ownership verified</b></sub></td>
+</tr>
+</table>
 
 ## ✨ Features
 
