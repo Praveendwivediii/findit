@@ -28,13 +28,17 @@ On most campuses, lost items end up in a security office with no digital record,
 
 ## 📸 Screenshots
 
-| Login / Register | Dashboard (dark) |
+| Dashboard | Browse items |
 |---|---|
-| ![Login](docs/screenshots/login.png) | ![Dashboard dark](docs/screenshots/dashboard-dark.png) |
+| ![Dashboard](docs/screenshots/dashboard.png) | ![Browse items](docs/screenshots/browse-items.png) |
 
-| Dashboard (light) | Claim & verification |
+| Search and filter | Claim: verification question |
 |---|---|
-| ![Dashboard light](docs/screenshots/dashboard-light.png) | ![Claim flow](docs/screenshots/claim-flow.png) |
+| ![Search results](docs/screenshots/search.png) | ![Claim question](docs/screenshots/claim-question.png) |
+
+| Claim: wrong answer, attempts left | Claim: ownership verified |
+|---|---|
+| ![Wrong answer](docs/screenshots/claim-wrong-answer.png) | ![Ownership verified](docs/screenshots/claim-verified.png) |
 
 ## ✨ Features
 
